@@ -1,0 +1,17 @@
+Contexte — projet "Galien Guest Lists"
+
+La Fondation Galien construit un petit outil interne (SaaS) pour consolider et consulter les guest lists des événements Prix Galien (V1 : Prix USA 2026 — Forum, Ceremony, Patient Summit, VIP Dinner). Usage critique : les desks d'accueil doivent pouvoir vérifier en quelques secondes si quelqu'un est inscrit, sans en perdre personne.
+
+Principe non négociable : ce SaaS ne recalcule jamais ma logique d'extraction/dédoublonnage/scope (mon pipeline HubDB existant, script generate-guest-csvs.js) — il consomme ma sortie telle quelle comme unique source de vérité, jamais les tables brutes.
+
+Accès et authentification : pas de nouveau système de connexion. La logique retenue est : connecté à HubSpot (SSO Google Workspace déjà en place) → accès direct au SaaS via une entrée ajoutée dans le menu HubSpot, sans reconnexion. L'écran de login n'apparaît qu'en repli (accès direct à l'URL sans passer par HubSpot, ou session expirée).
+
+6 captures de la maquette sont jointes, dans l'ordre du parcours utilisateur :
+1-login.png — écran de repli uniquement (voir ci-dessus), SSO restreint au domaine
+2-programs.png — sélection du Prix (un seul actif en V1 : USA 2026)
+3-desk.png — vue desk jour J : recherche, liste triée, export CSV/Excel/PDF
+4-overview.png — vue exploratoire : capacité éditable, alertes, relances sur les listes de trous
+5-config.png — configuration des événements et du mapping produits Shopify
+6-admin.png — permissions par édition (fonctionnalité V2, pas active en V1)
+
+Peux-tu regarder ces captures et m'aider à évaluer si l'architecture proposée (lire une sortie déjà calculée plutôt que les tables HubDB brutes) est réaliste de mon côté ? En particulier : est-ce que mon Google Sheet quotidien contient déjà les 4 listes calculées comme mes CSV, ce qui permettrait au SaaS de le lire directement sans que je touche à HubDB ?
