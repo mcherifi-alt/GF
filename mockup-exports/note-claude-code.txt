@@ -1,17 +1,44 @@
 Contexte — projet "Galien Guest Lists"
 
-La Fondation Galien construit un petit outil interne (SaaS) pour consolider et consulter les guest lists des événements Prix Galien (V1 : Prix USA 2026 — Forum, Ceremony, Patient Summit, VIP Dinner). Usage critique : les desks d'accueil doivent pouvoir vérifier en quelques secondes si quelqu'un est inscrit, sans en perdre personne.
+VISION
+La Fondation Galien organise plusieurs événements pharma/santé aux USA (Forum, Galien Patient Summit, Awards Ceremony, VIP Dinner) et, à terme, d'autres éditions de Prix Galien dans le monde (Bridges à Stockholm, Japan, India, UK...). Aujourd'hui, la consolidation des guest lists est faite manuellement par Laetitia, avec un enjeu critique : les desks d'accueil le jour J ne doivent perdre personne — la liste doit être fiable et exhaustive au moment où quelqu'un se présente.
 
-Principe non négociable : ce SaaS ne recalcule jamais ma logique d'extraction/dédoublonnage/scope (mon pipeline HubDB existant, script generate-guest-csvs.js) — il consomme ma sortie telle quelle comme unique source de vérité, jamais les tables brutes.
+POURQUOI CE PROJET, ALORS QUE LE PIPELINE EXISTE DÉJÀ
+Le script generate-guest-csvs.js et le Google Sheet quotidien résolvent déjà l'extraction et le calcul des listes. Mais un signal important dans le dernier échange : la comparaison manuelle du fichier de Laetitia à chaque envoi, pour vérifier que l'automatisation reste alignée, existe encore. Le SaaS n'a pas vocation à refaire ce pipeline, mais à combler ce qui manque autour : un outil desk-day pensé pour la vérification rapide, une couche de validation automatique qui remplace cette comparaison manuelle, et un workflow actionnable sur les deux listes de trous.
 
-Accès et authentification : pas de nouveau système de connexion. La logique retenue est : connecté à HubSpot (SSO Google Workspace déjà en place) → accès direct au SaaS via une entrée ajoutée dans le menu HubSpot, sans reconnexion. L'écran de login n'apparaît qu'en repli (accès direct à l'URL sans passer par HubSpot, ou session expirée).
+PRINCIPE NON NÉGOCIABLE
+Le SaaS ne recalcule jamais la logique d'extraction/dédoublonnage/scope existante — il consomme la sortie du script telle quelle comme unique source de vérité, jamais les tables HubDB brutes (submissions_assets, tables régionales).
 
-6 captures de la maquette sont jointes, dans l'ordre du parcours utilisateur :
-1-login.png — écran de repli uniquement (voir ci-dessus), SSO restreint au domaine
-2-programs.png — sélection du Prix (un seul actif en V1 : USA 2026)
-3-desk.png — vue desk jour J : recherche, liste triée, export CSV/Excel/PDF
-4-overview.png — vue exploratoire : capacité éditable, alertes, relances sur les listes de trous
-5-config.png — configuration des événements et du mapping produits Shopify
-6-admin.png — permissions par édition (fonctionnalité V2, pas active en V1)
+V1 — SCOPE : PRIX USA 2026 UNIQUEMENT
+Forum, Ceremony, Patient Summit, VIP Dinner. Un seul programme pour valider la fiabilité de l'outil avant d'étendre le périmètre.
 
-Peux-tu regarder ces captures et m'aider à évaluer si l'architecture proposée (lire une sortie déjà calculée plutôt que les tables HubDB brutes) est réaliste de mon côté ? En particulier : est-ce que mon Google Sheet quotidien contient déjà les 4 listes calculées comme mes CSV, ce qui permettrait au SaaS de le lire directement sans que je touche à HubDB ?
+Écrans V1 (captures jointes, dans l'ordre du parcours) :
+1-login.png — SSO Google restreint au domaine, écran de repli uniquement : l'accès normal passe par un lien ajouté dans le menu HubSpot, session transparente puisque c'est le même SSO que celui déjà utilisé pour se connecter à HubSpot.
+2-programs.png — sélection du Prix (un seul actif en V1 : USA 2026).
+3-desk.png — vue desk jour J : sélecteur d'événement, recherche tolérante aux fautes de frappe, liste triée alphabétiquement, bandeau de fraîcheur des données avec option hors-ligne, export CSV/Excel/PDF.
+4-overview.png — vue exploratoire : comparatif des 4 événements, seuils de capacité éditables avec alerte "low registration" et "sold out", changements depuis la dernière synchro (nouveaux / disparus), les 2 listes de trous transformées en tâches actionnables avec bouton de relance et traçabilité ("relancé le...").
+5-config.png — configuration des événements, capacités, mapping produits Shopify vers événement, catégories de guests — piloté sans intervention développeur.
+6-admin.png — gestion des permissions par édition (fonctionnalité V2, présentée ici pour montrer la direction, pas active en V1).
+
+FONCTIONNALITÉS IDENTIFIÉES (recherche exploratoire)
+Six idées jugées simples mais à fort impact, toutes maquettées :
+- Recherche tolérante aux fautes — évite qu'un inscrit soit refusé à tort au desk (priorité haute)
+- Détection des "disparus" entre deux synchros — un guest annulé disparaît sinon silencieusement du run suivant, sans laisser de trace (priorité haute)
+- Seuils de capacité + alerte sold-out — signal pour l'équipe, n'enferme jamais la billetterie Shopify elle-même
+- Relance semi-automatisée sur les listes de trous — toujours après revue et clic manuel, jamais automatique
+- Copie hors-ligne pour le jour J — continuité si la connexion lâche au desk
+- Nouveaux inscrits depuis la dernière synchro — complément positif du point "disparus"
+
+V2 — DIRECTION ENVISAGÉE : SCALABILITÉ SUR TOUS LES PRIX DÉJÀ RÉFÉRENCÉS
+Une fois la V1 validée sur Prix USA 2026, l'architecture est pensée pour étendre sans réécriture :
+- Écran de sélection de programme (2-programs.png) : basculer entre Prix USA, Bridges (Stockholm), Japan (Tokyo), India, UK — activé dès qu'une 2e édition doit réellement être onboardée, pas anticipé plus tôt.
+- Écran Admin (6-admin.png) : affecter chaque membre de l'équipe à une ou plusieurs éditions, pour répondre à un besoin de confidentialité inter-régions.
+- Le schéma de données (événement, édition, catégorie piloté par config plutôt que codé en dur) est déjà pensé pour ça — rien à réécrire côté V1, juste à activer plus tard.
+
+PLAN DE VALIDATION AVANT DE FAIRE CONFIANCE À L'OUTIL POUR DE VRAI
+Avant le premier usage réel au desk : un diff technique automatique entre ce que le script écrit et ce que le SaaS affiche (zéro écart toléré, sinon la synchro n'est pas promue et l'app garde la dernière version validée), une comparaison humaine avec Laetitia sur un vrai événement à venir, puis un test en doublure — jamais en remplacement — lors d'un événement à moindre enjeu avant Forum/Ceremony. Critère de réussite non négociable : zéro faux négatif toléré — quelqu'un de réellement inscrit affiché comme absent est un échec bloquant. Un faux positif (doublon, entrée ambiguë) est un défaut à corriger, pas un bloqueur.
+
+CE QU'ON CHERCHE À VALIDER AVEC TOI MAINTENANT
+Est-ce que ton Google Sheet quotidien contient déjà les 4 listes calculées, comme tes CSV ? Si oui, le SaaS peut le lire directement en lecture seule via l'API Google Sheets, sans que tu aies à toucher à quoi que ce soit côté HubDB.
+
+Peux-tu regarder les captures jointes et m'aider à évaluer si cette direction est réaliste de ton côté ?
