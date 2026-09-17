@@ -112,9 +112,9 @@ export default async function ConfigPage() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-[15px] font-semibold text-text">Ticket Tailor integration</div>
+              <div className="text-[15px] font-semibold text-text">Ticketing &amp; check-in</div>
               <div className="text-[12.5px] text-text-faint mt-0.5">
-                Issue QR tickets and pull check-in status back into the guest list. V2, off by default.
+                Ticket Tailor integration. Issue QR tickets and pull check-in status back into the guest list. V2, off by default.
               </div>
             </div>
             <div className={`w-11 h-6.5 rounded-full p-0.75 flex items-center ${ticketTailor.connected ? "bg-accent justify-end" : "bg-border-strong justify-start"}`}>
