@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { exportCsv, exportExcel, printList } from "@/lib/export";
 import { fuzzyMatchScore } from "@/lib/fuzzy";
 import type { EventConfig, EventName, Guest, SyncStatus } from "@/lib/types";
+import { useClickOutside } from "@/lib/useClickOutside";
 
 const EVENTS: EventName[] = ["Forum", "Ceremony", "Patient Summit", "VIP Dinner"];
 
@@ -30,6 +31,9 @@ export function DeskClient({
   const [activeEvent, setActiveEvent] = useState<EventName>("Forum");
   const [query, setQuery] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
+  const [suggestionDismissed, setSuggestionDismissed] = useState(false);
+  const exportRef = useClickOutside<HTMLDivElement>(useCallback(() => setExportOpen(false), []));
+  const searchRef = useClickOutside<HTMLDivElement>(useCallback(() => setSuggestionDismissed(true), []));
 
   const eventGuests = useMemo(
     () =>
@@ -105,7 +109,7 @@ export function DeskClient({
         </div>
 
         <div className="flex items-center justify-between no-print">
-          <div className="relative">
+          <div className="relative" ref={searchRef}>
             <div className="w-[420px] h-11 bg-surface border border-border-strong rounded-[10px] flex items-center gap-2.5 px-3.5">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA1AC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="7" />
@@ -113,12 +117,15 @@ export function DeskClient({
               </svg>
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSuggestionDismissed(false);
+                }}
                 placeholder="Search by name…"
                 className="flex-1 text-sm outline-none placeholder:text-text-faint"
               />
             </div>
-            {suggestion && (
+            {suggestion && !suggestionDismissed && (
               <div className="absolute top-12 left-0 w-[420px] bg-surface border border-border rounded-[10px] shadow-lg p-2 z-10">
                 <div className="text-[11px] font-semibold text-text-faint tracking-wide px-2 pt-1 pb-1.5">
                   DID YOU MEAN
@@ -140,7 +147,7 @@ export function DeskClient({
           </div>
           <div className="flex items-center gap-4">
             <span className="text-[13.5px] text-text-muted">{eventGuests.length} registered guests</span>
-            <div className="relative">
+            <div className="relative" ref={exportRef}>
               <button
                 onClick={() => setExportOpen((v) => !v)}
                 className="h-10 bg-accent-tint border border-accent-border rounded-lg flex items-center gap-2 px-4 text-[13.5px] font-medium text-accent"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type {
   Category,
   EmptyDashboardOrg,
@@ -53,6 +53,7 @@ export function OverviewClient({
   );
   const [editingEvent, setEditingEvent] = useState<EventName | null>(null);
   const [draftCapacity, setDraftCapacity] = useState("");
+  const cancellingRef = useRef(false);
   const [selectedEvent, setSelectedEvent] = useState<EventName>("Forum");
   const [remindedOrgs, setRemindedOrgs] = useState<Set<string>>(
     () => new Set(emptyDashboardOrgs.filter((o) => o.remindedOn).map((o) => o.submissionRowId)),
@@ -151,7 +152,20 @@ export function OverviewClient({
                         autoFocus
                         value={draftCapacity}
                         onChange={(e) => setDraftCapacity(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && saveCapacity(c.event)}
+                        onBlur={() => {
+                          if (cancellingRef.current) {
+                            cancellingRef.current = false;
+                            return;
+                          }
+                          saveCapacity(c.event);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveCapacity(c.event);
+                          if (e.key === "Escape") {
+                            cancellingRef.current = true;
+                            setEditingEvent(null);
+                          }
+                        }}
                         className="w-14 h-6 border-1.5 border-accent rounded-md text-center font-mono text-[13px]"
                       />
                       <button onClick={() => saveCapacity(c.event)} className="text-good-text">

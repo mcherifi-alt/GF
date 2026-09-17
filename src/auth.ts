@@ -13,8 +13,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ profile }) {
-      const email = profile?.email ?? "";
-      return email.endsWith(`@${ALLOWED_DOMAIN}`);
+      const email = (profile?.email ?? "").toLowerCase();
+      // email_verified matters here: without it, an unverified address
+      // claiming to be @galienfoundation.org would pass the suffix check.
+      const verified = profile?.email_verified === true;
+      return verified && email.endsWith(`@${ALLOWED_DOMAIN}`);
     },
   },
 });
