@@ -1,17 +1,18 @@
 import { auth } from "@/auth";
 import { TopNav } from "@/components/TopNav";
 import { CategoryBadge } from "@/components/CategoryBadge";
-import { getEventConfig, getProductMapping, getSyncStatus } from "@/lib/data/source";
+import { getEventConfig, getProductMapping, getSyncStatus, getTicketTailorConfig } from "@/lib/data/source";
 import type { Category } from "@/lib/types";
 
 const CATEGORIES: Category[] = ["Nominee", "Partner", "VIP", "Ticket Holder", "VIP Dinner"];
 
 export default async function ConfigPage() {
   const session = await auth();
-  const [eventConfig, productMapping, syncStatus] = await Promise.all([
+  const [eventConfig, productMapping, syncStatus, ticketTailor] = await Promise.all([
     getEventConfig(),
     getProductMapping(),
     getSyncStatus(),
+    getTicketTailorConfig(),
   ]);
 
   return (
@@ -105,6 +106,41 @@ export default async function ConfigPage() {
             {CATEGORIES.map((cat) => (
               <CategoryBadge key={cat} category={cat} />
             ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[15px] font-semibold text-text">Ticket Tailor integration</div>
+              <div className="text-[12.5px] text-text-faint mt-0.5">
+                Issue QR tickets and pull check-in status back into the guest list. V2, off by default.
+              </div>
+            </div>
+            <div className={`w-11 h-6.5 rounded-full p-0.75 flex items-center ${ticketTailor.connected ? "bg-accent justify-end" : "bg-border-strong justify-start"}`}>
+              <div className="w-5 h-5 rounded-full bg-surface shadow" />
+            </div>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4.5 flex flex-col gap-3.5 opacity-50">
+            <div className="flex items-center gap-1.75">
+              <span className="w-1.5 h-1.5 rounded-full bg-text-faint" />
+              <span className="text-[12.5px] font-semibold text-text-muted">
+                {ticketTailor.connected ? "Connected" : "Not connected"}
+              </span>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              <label className="flex items-center gap-2.5 text-[13px] text-neutral-text">
+                <span className="w-4 h-4 rounded border border-border-strong shrink-0" />
+                Push new guests to Ticket Tailor as tickets
+              </label>
+              <label className="flex items-center gap-2.5 text-[13px] text-neutral-text">
+                <span className="w-4 h-4 rounded border border-border-strong shrink-0" />
+                Pull check-in status back into the guest list
+              </label>
+            </div>
+            <button className="self-start h-8.5 px-3.5 bg-surface border border-border-strong rounded-lg text-[12.5px] font-semibold text-text-muted">
+              Connect Ticket Tailor
+            </button>
           </div>
         </div>
       </div>

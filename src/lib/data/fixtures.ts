@@ -80,6 +80,15 @@ export const UNMATCHED_SHOPIFY_ORDERS: UnmatchedShopifyOrder[] = [
   { email: "r.cardiel@perspectum.example", name: "R. Cardiel", company: "Perspectum", products: "Galien Forum USA 2026", orders: 1, firstPurchase: "2026-09-08", remindedOn: "2026-09-11" },
 ];
 
+// V2 — see synthese-v1.html section 08. Off until the integration is
+// actually built; the Config screen surfaces this switch (disabled) so
+// the team sees where it will live rather than discovering it later.
+export const TICKET_TAILOR_CONFIG = {
+  connected: false,
+  pushNewGuests: false,
+  pullCheckIns: false,
+};
+
 export const SYNC_STATUS: SyncStatus = {
   lastSyncAt: "2026-09-15T14:32:00-04:00",
   ok: true,

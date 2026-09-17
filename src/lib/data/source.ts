@@ -11,6 +11,7 @@ import {
   PRODUCT_MAPPING,
   SYNC_DELTA,
   SYNC_STATUS,
+  TICKET_TAILOR_CONFIG,
   UNMATCHED_SHOPIFY_ORDERS,
 } from "@/lib/data/fixtures";
 import type { EventName } from "@/lib/types";
@@ -42,4 +43,8 @@ export async function getSyncStatus() {
 
 export async function getSyncDelta() {
   return SYNC_DELTA;
+}
+
+export async function getTicketTailorConfig() {
+  return TICKET_TAILOR_CONFIG;
 }
